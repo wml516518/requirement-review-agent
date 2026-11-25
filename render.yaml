@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: requirement-review
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 server.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: LLM_MAX_COMPLETION_TOKENS
+        value: "4096"

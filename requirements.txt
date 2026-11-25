@@ -1,0 +1,5 @@
+PyMuPDF>=1.24.0
+pdfplumber>=0.11.0
+certifi>=2024.8.30
+cryptography>=42.0.0
+Pillow>=10.0.0

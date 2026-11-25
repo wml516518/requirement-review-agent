@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>需求文档评审</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="review-workspace" aria-label="需求文档评审工作台">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Requirement Review</p>
+            <h1>需求文档评审</h1>
+          </div>
+          <div class="status-pill" id="overallStatus">等待文件</div>
+        </header>
+
+        <section class="toolbar" aria-label="评审操作">
+          <label class="file-picker" for="pdfInput">
+            <span class="file-icon" aria-hidden="true">PDF</span>
+            <span>
+              <strong id="fileName">选择需求文档</strong>
+              <small id="fileMeta">支持 PDF</small>
+            </span>
+            <input id="pdfInput" type="file" accept="application/pdf,.pdf" />
+          </label>
+
+          <div class="controls">
+            <label class="threshold-control" for="thresholdInput">
+              <span>通过分</span>
+              <input id="thresholdInput" type="number" min="1" max="100" step="1" value="80" />
+            </label>
+            <button class="primary-button" id="reviewButton" type="button" disabled>
+              <span aria-hidden="true">✓</span>
+              开始评审
+            </button>
+          </div>
+        </section>
+
+        <section class="panel model-config-panel" aria-label="大模型 API 设置">
+          <div class="panel-head">
+            <div>
+              <h2>大模型 API 设置</h2>
+              <p class="panel-subtitle">保存后 API Key 只在服务端加密存储，评审时使用当前选中的模型。</p>
+            </div>
+            <span class="mode-label" id="modelStatus">未配置</span>
+          </div>
+          <div class="model-layout">
+            <div class="model-list" id="modelList"></div>
+            <form class="model-form" id="modelForm">
+              <input id="modelIdInput" type="hidden" />
+              <label class="field">
+                <span>大模型名称</span>
+                <input id="modelNameInput" placeholder="例如 GPT-4.1 / DeepSeek / Azure GPT" autocomplete="off" />
+              </label>
+              <label class="field">
+                <span>接口类型</span>
+                <select id="modelProviderInput">
+                  <option value="openai_compatible">OpenAI 兼容接口</option>
+                  <option value="azure">Azure OpenAI</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>API 地址</span>
+                <input id="modelBaseUrlInput" placeholder="https://api.openai.com/v1" autocomplete="off" />
+              </label>
+              <label class="field">
+                <span>模型标识</span>
+                <input id="modelModelInput" placeholder="gpt-4o-mini / deepseek-chat" autocomplete="off" />
+              </label>
+              <label class="field azure-only">
+                <span>Azure 部署名称</span>
+                <input id="modelDeploymentInput" placeholder="deployment-name" autocomplete="off" />
+              </label>
+              <label class="field azure-only">
+                <span>Azure API Version</span>
+                <input id="modelApiVersionInput" placeholder="2024-12-01-preview" autocomplete="off" />
+              </label>
+              <label class="field">
+                <span>API Key</span>
+                <input id="modelApiKeyInput" type="password" placeholder="保存后再次编辑可留空表示不修改" autocomplete="new-password" />
+              </label>
+              <label class="field">
+                <span>最大输出 Token</span>
+                <input id="modelMaxTokensInput" type="number" min="128" max="65536" step="128" value="4096" />
+              </label>
+              <div class="model-actions">
+                <button class="primary-button compact-button" id="saveModelButton" type="submit">保存模型</button>
+                <button class="ghost-button compact-button" id="newModelButton" type="button">新增配置</button>
+                <button class="ghost-button compact-button" id="testModelButton" type="button" disabled>测试可用</button>
+                <button class="ghost-button compact-button danger-button" id="deleteModelButton" type="button" disabled>删除配置</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="summary-grid" aria-label="评审概览">
+          <div class="metric">
+            <span>文档页数</span>
+            <strong id="pageCount">-</strong>
+          </div>
+          <div class="metric">
+            <span>提取字数</span>
+            <strong id="textCount">-</strong>
+          </div>
+          <div class="metric">
+            <span>通过角色</span>
+            <strong id="passedCount">-</strong>
+          </div>
+          <div class="metric">
+            <span>平均分</span>
+            <strong id="averageScore">-</strong>
+          </div>
+        </section>
+
+        <section class="panel role-config-panel" aria-label="评审角色配置">
+          <div class="panel-head">
+            <h2>评审角色</h2>
+            <div class="role-actions">
+              <button class="ghost-button compact-button" id="addRoleButton" type="button">
+                <span aria-hidden="true">＋</span>
+                新增角色
+              </button>
+              <button class="ghost-button compact-button" id="resetRolesButton" type="button">
+                全选本次
+              </button>
+            </div>
+          </div>
+          <div class="role-editor-list" id="roleEditorList"></div>
+        </section>
+
+        <section class="content-layout">
+          <section class="panel results-panel" aria-label="角色评审结果">
+            <div class="panel-head">
+              <h2>评审结果</h2>
+              <button class="ghost-button" id="copyButton" type="button" disabled>
+                <span aria-hidden="true">⧉</span>
+                复制报告
+              </button>
+            </div>
+            <div class="role-list" id="roleList">
+              <article class="empty-state">
+                <h3>尚未评审</h3>
+                <p>添加 PDF 后点击开始评审。</p>
+              </article>
+            </div>
+          </section>
+
+          <aside class="panel document-panel" aria-label="文档摘录">
+            <div class="panel-head">
+              <h2>文档摘录</h2>
+              <span class="mode-label" id="extractMode">未解析</span>
+            </div>
+            <pre id="documentPreview">等待选择文件。</pre>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

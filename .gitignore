@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+reports/
+.env
+.env.local
+.llm_secret
+llm_models_store.json
+*.log
+.DS_Store
+roles_store.json
+reports.json
